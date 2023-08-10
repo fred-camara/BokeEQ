@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="FBhgpI" name="BokeEQ" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
+              cppLanguageStandard="17">
   <MAINGROUP id="SBdQdM" name="BokeEQ">
     <GROUP id="{205F644C-6EF1-6CE2-72A1-0CDF039F6E14}" name="Source">
       <FILE id="SBOQDo" name="PluginProcessor.cpp" compile="1" resource="0"
