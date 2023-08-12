@@ -10,6 +10,28 @@
 
 #include <JuceHeader.h>
 
+struct ChainSettings {
+    float peakFreq { 0 }, peakGainInDecibles { 0 }, peakQuality {1.f};
+    float lowCutFreq { 0 }, highCutFreq { 0 };
+    int lowCutSlope { 0 }, highCutSlope { 0 };
+};
+
+ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
+{
+    ChainSettings settings;
+    
+    settings.lowCutFreq = apvts.getRawParameterValue("LowCut Freq")->load();
+    settings.highCutFreq = apvts.getRawParameterValue("HighCut Freq")->load();
+    settings.peakFreq = apvts.getRawParameterValue("Peak Freq")->load();
+    settings.peakGainInDecibles = apvts.getRawParameterValue("Peak Gain")->load();
+    settings.peakQuality = apvts.getRawParameterValue("Peak Quality")->load();
+    settings.lowCutSlope = apvts.getRawParameterValue("LowCut Slope")->load();
+    settings.highCutSlope = apvts.getRawParameterValue("HighCut Slope")->load();
+    
+    return settings;
+    
+}
+
 //==============================================================================
 /**
 */
@@ -71,7 +93,12 @@ private:
     
     MonoChain leftChain, rightChain; 
     
-    
+    enum ChainPositions
+    {
+        LowCut,
+        Peak,
+        HighCut
+    };
     
     
     //==============================================================================
