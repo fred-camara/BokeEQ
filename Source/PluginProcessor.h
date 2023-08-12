@@ -10,10 +10,20 @@
 
 #include <JuceHeader.h>
 
-struct ChainSettings {
+
+enum Slope
+{
+    Slope_12,
+    Slope_24,
+    Slope_36,
+    Slope_48
+};
+
+struct ChainSettings
+{
     float peakFreq { 0 }, peakGainInDecibles { 0 }, peakQuality {1.f};
     float lowCutFreq { 0 }, highCutFreq { 0 };
-    int lowCutSlope { 0 }, highCutSlope { 0 };
+    int lowCutSlope { Slope_12 }, highCutSlope { Slope_12 };
 };
 
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
@@ -25,8 +35,8 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts)
     settings.peakFreq = apvts.getRawParameterValue("Peak Freq")->load();
     settings.peakGainInDecibles = apvts.getRawParameterValue("Peak Gain")->load();
     settings.peakQuality = apvts.getRawParameterValue("Peak Quality")->load();
-    settings.lowCutSlope = apvts.getRawParameterValue("LowCut Slope")->load();
-    settings.highCutSlope = apvts.getRawParameterValue("HighCut Slope")->load();
+    settings.lowCutSlope = static_cast<Slope>(apvts.getRawParameterValue("LowCut Slope")->load());
+    settings.highCutSlope = static_cast<Slope>(apvts.getRawParameterValue("HighCut Slope")->load());
     
     return settings;
     
