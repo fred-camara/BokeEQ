@@ -292,7 +292,7 @@ void BokeEQAudioProcessor::updatePeakFilter(const ChainSettings &chainSettings)
     
 }
 
-void BokeEQAudioProcessor::updateCoefficients(Coefficients &old, const Coefficients &replacements)
+void updateCoefficients(Coefficients &old, const Coefficients &replacements)
 {
     *old = *replacements;
 };
