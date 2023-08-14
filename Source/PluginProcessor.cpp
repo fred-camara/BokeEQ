@@ -277,9 +277,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout BokeEQAudioProcessor::create
     return layout;
 }
 
+Coefficients makePeakFilter(const ChainSettings& chainSettings, double sampleRate)
+{
+    return juce::dsp::IIR::Coefficients<float>::makePeakFilter(sampleRate, chainSettings.peakFreq, chainSettings.peakQuality, juce::Decibels::decibelsToGain(chainSettings.peakGainInDecibles));
+}
+
+
 void BokeEQAudioProcessor::updatePeakFilter(const ChainSettings &chainSettings)
 {
-    auto peakCoeffecicients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(getSampleRate(), chainSettings.peakFreq, chainSettings.peakQuality, juce::Decibels::decibelsToGain(chainSettings.peakGainInDecibles));
+    auto peakCoeffecicients = makePeakFilter(chainSettings, getSampleRate());
     
     updateCoefficients(leftChain.get<ChainPositions::Peak>().coefficients, peakCoeffecicients);
     updateCoefficients(rightChain.get<ChainPositions::Peak>().coefficients, peakCoeffecicients);
