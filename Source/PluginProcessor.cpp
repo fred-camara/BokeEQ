@@ -189,7 +189,7 @@ void BokeEQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
 //==============================================================================
 bool BokeEQAudioProcessor::hasEditor() const
 {
-    return true; // (change this to false if you choose to not supply an editor)
+    return true;
 }
 
 juce::AudioProcessorEditor* BokeEQAudioProcessor::createEditor()

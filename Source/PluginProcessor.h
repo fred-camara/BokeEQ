@@ -15,8 +15,7 @@ enum Slope
 {
     Slope_12,
     Slope_24,
-    Slope_36,
-    Slope_48
+    Slope_36,    Slope_48
 };
 
 struct ChainSettings
