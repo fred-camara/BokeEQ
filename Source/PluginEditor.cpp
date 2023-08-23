@@ -9,24 +9,9 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
-//==============================================================================
-BokeEQAudioProcessorEditor::BokeEQAudioProcessorEditor (BokeEQAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p),
-    peakFreqSliderAttachment(audioProcessor.apvts, "Peak Freq", peakFreqSlider),
-peakGainSliderAttachment(audioProcessor.apvts, "Peak Gain", peakGainSlider),
-peakQualitySliderAttachment(audioProcessor.apvts, "Peak Quality", peakQualitySlider),
-lowCutFreqSliderAttachment(audioProcessor.apvts, "LowCut Freq", lowCutFreqSlider),
-highCutFreqSliderAttachment(audioProcessor.apvts, "HighCut Freq", highCutFreqSlider),
-lowCutSlopeSliderAttachment(audioProcessor.apvts, "LowCut Slope", lowCutSlopeSlider),
-highCutSlopeSliderAttachment(audioProcessor.apvts, "HighCut Slope", highCutSlopeSlider)
+
+ResponseCurveComponent::ResponseCurveComponent(BokeEQAudioProcessor& p) : audioProcessor(p)
 {
-    // Make sure that before the constructor has finished, you've set the
-    // editor's size to whatever you need it to be.
-    
-    for (auto* comp : getComps())
-    {
-        addAndMakeVisible(comp);
-    }
     const auto& params = audioProcessor.getParameters();
     
     for (auto param : params )
@@ -35,30 +20,56 @@ highCutSlopeSliderAttachment(audioProcessor.apvts, "HighCut Slope", highCutSlope
     }
     
     startTimerHz(60);
-    
-    setSize (600, 400);
 }
 
-BokeEQAudioProcessorEditor::~BokeEQAudioProcessorEditor()
+
+// destructor
+ResponseCurveComponent::~ResponseCurveComponent()
 {
     const auto& params = audioProcessor.getParameters();
     
     for (auto param : params )
     {
         param->removeListener(this);
-    }}
+    }
+}
+
+void ResponseCurveComponent::parameterValueChanged(int parameterIndex, float newValue)
+{
+    parametersChanged.set(true);
+};
+
+void ResponseCurveComponent::timerCallback()
+{
+    if (parametersChanged.compareAndSetBool(false, true) )
+    {
+        // update the monochain
+        double sampleRate = audioProcessor.getSampleRate();
+        auto chainSettings = getChainSettings(audioProcessor.apvts);
+        auto peakCoefficients = makePeakFilter(chainSettings, sampleRate);
+        updateCoefficients(monoChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
+        
+        auto lowCutCoefficients = makeLowCutFilter(chainSettings, sampleRate);
+        auto highCutCoefficients = makeHighCutFilter(chainSettings, sampleRate);
+        
+        updateCutFilter(monoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, chainSettings.lowCutSlope);
+        updateCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, chainSettings.highCutSlope);
+    
+        // signal a repaint
+        repaint();
+    }
+};
+
 
 //==============================================================================
-void BokeEQAudioProcessorEditor::paint (juce::Graphics& g)
+void ResponseCurveComponent::paint (juce::Graphics& g)
 {
     using namespace juce;
     
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (Colours::black);
     
-    auto bounds = getLocalBounds();
-    
-    auto responseArea = bounds.removeFromTop(bounds.getHeight() * 0.33);
+    auto responseArea = getLocalBounds();
     
     auto w = responseArea.getWidth();
 
@@ -122,12 +133,55 @@ void BokeEQAudioProcessorEditor::paint (juce::Graphics& g)
 
 }
 
+//==============================================================================
+BokeEQAudioProcessorEditor::BokeEQAudioProcessorEditor (BokeEQAudioProcessor& p)
+    : AudioProcessorEditor (&p), audioProcessor (p),
+responseCurveComponent(audioProcessor),
+    peakFreqSliderAttachment(audioProcessor.apvts, "Peak Freq", peakFreqSlider),
+peakGainSliderAttachment(audioProcessor.apvts, "Peak Gain", peakGainSlider),
+peakQualitySliderAttachment(audioProcessor.apvts, "Peak Quality", peakQualitySlider),
+lowCutFreqSliderAttachment(audioProcessor.apvts, "LowCut Freq", lowCutFreqSlider),
+highCutFreqSliderAttachment(audioProcessor.apvts, "HighCut Freq", highCutFreqSlider),
+lowCutSlopeSliderAttachment(audioProcessor.apvts, "LowCut Slope", lowCutSlopeSlider),
+highCutSlopeSliderAttachment(audioProcessor.apvts, "HighCut Slope", highCutSlopeSlider)
+{
+    // Make sure that before the constructor has finished, you've set the
+    // editor's size to whatever you need it to be.
+    
+    for (auto* comp : getComps())
+    {
+        addAndMakeVisible(comp);
+    }
+    
+    setSize (600, 400);
+}
+
+BokeEQAudioProcessorEditor::~BokeEQAudioProcessorEditor()
+{
+    
+}
+
+//==============================================================================
+void BokeEQAudioProcessorEditor::paint (juce::Graphics& g)
+{
+    using namespace juce;
+    
+    // (Our component is opaque, so we must completely fill the background with a solid colour)
+    g.fillAll (Colours::black);
+    
+    auto bounds = getLocalBounds();
+
+}
+
 void BokeEQAudioProcessorEditor::resized()
 {
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
     auto bounds = getLocalBounds();
     auto responseArea = bounds.removeFromTop(bounds.getHeight() * 0.33);
+    
+    responseCurveComponent.setBounds(responseArea);
+    
     auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
     auto highCutArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
     
@@ -142,25 +196,8 @@ void BokeEQAudioProcessorEditor::resized()
      
 }
 
-void BokeEQAudioProcessorEditor::parameterValueChanged(int parameterIndex, float newValue)
-{
-    parametersChanged.set(true);
-}
 
-void BokeEQAudioProcessorEditor::timerCallback()
-{
-    if (parametersChanged.compareAndSetBool(false, true) )
-    {
-        // update the monochain
-        auto chainSettings = getChainSettings(audioProcessor.apvts);
-        auto peakCoefficients = makePeakFilter(chainSettings, audioProcessor.getSampleRate());
-        updateCoefficients(monoChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
-        // signal a repaint
-        repaint();
-    }
-}
-
-
+// this is for the pieces in the GUI
 std::vector<juce::Component*> BokeEQAudioProcessorEditor::getComps()
 {
     return {
@@ -170,6 +207,7 @@ std::vector<juce::Component*> BokeEQAudioProcessorEditor::getComps()
         &lowCutFreqSlider,
         &highCutFreqSlider,
         &lowCutSlopeSlider,
-        &highCutSlopeSlider
+        &highCutSlopeSlider,
+        &responseCurveComponent,
     };
 }
