@@ -36,6 +36,12 @@ struct RotarySliderWithLabels : juce::Slider
     {
         setLookAndFeel(nullptr);
     }
+    struct LabelPos
+    {
+        float pos;
+        juce::String label;
+    };
+    juce::Array<LabelPos> labels;
     // needed for custom visuals on the component
     void paint(juce::Graphics& g) override;
     juce::Rectangle<int> getSliderBounds() const;
@@ -67,6 +73,8 @@ private:
     BokeEQAudioProcessor& audioProcessor;
     juce::Atomic<bool> parametersChanged { false};
     MonoChain monoChain;
+    
+    // void updateChain();
     
 };
 //==============================================================================
