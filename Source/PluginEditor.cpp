@@ -194,6 +194,7 @@ ResponseCurveComponent::ResponseCurveComponent(BokeEQAudioProcessor& p) : audioP
         param->addListener(this);
     }
     
+    updateChain(); 
     startTimerHz(60);
 }
 
@@ -218,22 +219,26 @@ void ResponseCurveComponent::timerCallback()
 {
     if (parametersChanged.compareAndSetBool(false, true) )
     {
-        // update the monochain
-        double sampleRate = audioProcessor.getSampleRate();
-        auto chainSettings = getChainSettings(audioProcessor.apvts);
-        auto peakCoefficients = makePeakFilter(chainSettings, sampleRate);
-        updateCoefficients(monoChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
-        
-        auto lowCutCoefficients = makeLowCutFilter(chainSettings, sampleRate);
-        auto highCutCoefficients = makeHighCutFilter(chainSettings, sampleRate);
-        
-        updateCutFilter(monoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, chainSettings.lowCutSlope);
-        updateCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, chainSettings.highCutSlope);
-    
+        updateChain();
         // signal a repaint
         repaint();
     }
 };
+
+
+void ResponseCurveComponent::updateChain() {
+    // update the monochain
+    double sampleRate = audioProcessor.getSampleRate();
+    auto chainSettings = getChainSettings(audioProcessor.apvts);
+    auto peakCoefficients = makePeakFilter(chainSettings, sampleRate);
+    updateCoefficients(monoChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
+    
+    auto lowCutCoefficients = makeLowCutFilter(chainSettings, sampleRate);
+    auto highCutCoefficients = makeHighCutFilter(chainSettings, sampleRate);
+    
+    updateCutFilter(monoChain.get<ChainPositions::LowCut>(), lowCutCoefficients, chainSettings.lowCutSlope);
+    updateCutFilter(monoChain.get<ChainPositions::HighCut>(), highCutCoefficients, chainSettings.highCutSlope);
+}
 
 
 //==============================================================================
@@ -381,9 +386,12 @@ void BokeEQAudioProcessorEditor::resized()
     // This is generally where you'll want to lay out the positions of any
     // subcomponents in your editor..
     auto bounds = getLocalBounds();
-    auto responseArea = bounds.removeFromTop(bounds.getHeight() * 0.33);
+    auto hRatio = 25.f / 100.f; // JUCE_LIVE_CONSTANT(33) / 100.f;
+    auto responseArea = bounds.removeFromTop(bounds.getHeight() * hRatio);
     
     responseCurveComponent.setBounds(responseArea);
+    
+    bounds.removeFromTop(5); 
     
     auto lowCutArea = bounds.removeFromLeft(bounds.getWidth() * 0.33);
     auto highCutArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
