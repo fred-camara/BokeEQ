@@ -443,16 +443,21 @@ void ResponseCurveComponent::paint (juce::Graphics& g)
         responseCurve.lineTo(responseArea.getX() + i, map(mags[i]));
     }
     
-    // this is the path for response analyzer
-    auto leftChannelFFTPath = leftPathProducer.getPath();
-    leftChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
-    g.setColour(Colours::white);
-    g.strokePath(leftChannelFFTPath, PathStrokeType(1));
     
-    auto rightChannelFFTPath = rightPathProducer.getPath();
-    rightChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
-    g.setColour(Colours::skyblue);
-    g.strokePath(rightChannelFFTPath, PathStrokeType(1));
+    if (shouldShowFFTAnalysis)
+    {
+        // this is the path for response analyzer
+        auto leftChannelFFTPath = leftPathProducer.getPath();
+        leftChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
+        g.setColour(Colours::white);
+        g.strokePath(leftChannelFFTPath, PathStrokeType(1));
+        
+        auto rightChannelFFTPath = rightPathProducer.getPath();
+        rightChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
+        g.setColour(Colours::skyblue);
+        g.strokePath(rightChannelFFTPath, PathStrokeType(1));
+    }
+
     
     
     // steel blue
@@ -671,6 +676,15 @@ analyzerEnabledButtonAttachment(audioProcessor.apvts, "Analyzer Enabled", analyz
         }
     };
     
+    
+    analyzerEnabledButton.onClick = [safePtr]()
+    {
+        if (auto* comp = safePtr.getComponent())
+        {
+            auto enabled = comp->analyzerEnabledButton.getToggleState();
+            comp->responseCurveComponent.toggleAnalysisEnablement(enabled);
+        }
+    };
     
     
     setSize (600, 400);

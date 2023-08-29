@@ -251,6 +251,11 @@ juce::Timer
     void paint(juce::Graphics&) override;
     void resized() override;
     
+    void toggleAnalysisEnablement(bool enabled)
+    {
+        shouldShowFFTAnalysis = enabled;
+    }
+    
 private:
     BokeEQAudioProcessor& audioProcessor;
     juce::Atomic<bool> parametersChanged { false};
@@ -266,6 +271,7 @@ private:
     
     PathProducer leftPathProducer, rightPathProducer;
     
+    bool shouldShowFFTAnalysis = true;
 };
 //==============================================================================
 struct PowerButton : juce::ToggleButton {};
