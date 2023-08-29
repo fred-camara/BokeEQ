@@ -110,7 +110,15 @@ void BokeEQAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
     updateFilters();
     
     leftChannelFifo.prepare(samplesPerBlock);
-    // rightChannelFifo.prepare(samplesPerBlock);
+    rightChannelFifo.prepare(samplesPerBlock);
+    
+    
+//  for testing frequencies as sin waves 
+    //osc.initialise([](float x) { return std::sin(x);});
+//
+//    spec.numChannels = getTotalNumOutputChannels();
+//    osc.prepare(spec);
+//    osc.setFrequency(200);
     
 }
 
@@ -164,7 +172,11 @@ void BokeEQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     updateFilters();
     
     juce::dsp::AudioBlock<float> block(buffer);
-    
+//    For testing frequencies as sin waves
+    // buffer.clear();
+//    juce::dsp::ProcessContextReplacing<float> stereoContext(block);
+//    osc.process(stereoContext);
+//
     auto leftBlock = block.getSingleChannelBlock(0);
     auto rightBlock = block.getSingleChannelBlock(1);
     
@@ -176,7 +188,7 @@ void BokeEQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce:
     
     
     leftChannelFifo.update(buffer);
-    // rightChannelFifo.update(buffer);
+    rightChannelFifo.update(buffer);
     
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
