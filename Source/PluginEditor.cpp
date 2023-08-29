@@ -368,8 +368,13 @@ void ResponseCurveComponent::paint (juce::Graphics& g)
         responseCurve.lineTo(responseArea.getX() + i, map(mags[i]));
     }
     
-    g.setColour(Colours::blue);
-    g.strokePath(leftChannelFFTPath, PathStrokeType(1)); 
+    // this is the path for response analyzer
+    leftChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
+    
+    g.setColour(Colours::white);
+    g.strokePath(leftChannelFFTPath, PathStrokeType(1));
+    
+    
     
     
     // steel blue
